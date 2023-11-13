@@ -6,6 +6,62 @@ import datetime
 from datetime import timedelta
 
 
+colors = [
+         "#FF0000",  # Red
+         "#0000FF",  # Blue
+         "#800080",  # Purple
+         "#FFC0CB",  # Pink
+         "#FF69B4",  # Fuchsia
+         "#FFA07A",  # Coral
+         "#ADD8E6",  # Light blue 10
+         "#FF007F",  # Maroon
+         "#9932CC",  # Steel blue
+         "#8A2BE2",  # Blue violet
+         "#EE82EE",  # Violet
+         "#DA70D6",  # Orchid
+         "#FF1493",  # Deep pink
+         "#A0522D",  # Sienna
+         "#CD5C5C",  # Indian red
+         "#B22222",  # Firebrick
+         "#8B0000",  # Dark red 20
+         "#8B4513",  # Saddle brown
+         "#A020F0",  # Purple
+         "#483D8B",  # Dark slate blue
+         "#00CED1",  # Dark turquoise
+         "#4169E1",  # Royal blue
+         "#000080",  # Navy 30
+         "#C5E0DC",  # Pastel blue
+         "#B8B8B8",  # Light goldenrod yellow
+         "#B4EEB4",  # Pale green
+         "#B0C4DE",  # Powder blue
+         "#A9A9A9",  # Dark gray
+         "#A5D6A7",  # Pale turquoise
+         "#A8DADC",  # Light cornflower blue
+         "#A52A2A",  # Brown
+         "#A2A2A2",  # Light slate gray
+         "#9E9E9E",  # Dim gray
+         "#9ACD32",  # Yellow green
+         "#98FB98",  # Green yellow
+         "#9470D4",  # Light slate violet
+         "#90EE90",  # Light sea green
+         "#87CEFA",  # Light sky blue
+         "#87CEEB",  # Baby blue
+         "#81C784",  # Pale green
+         "#7FFFD4",  # Aquamarine
+         "#7EC0EE",  # Powder blue
+         "#7CFC00",  # Lawn green
+         "#778899",  # Light slate gray
+         "#76EEC6",  # Light cyan
+         "#708090",  # Slate gray
+         "#66CDFF",  # Sky blue
+         "#66CACA",  # Gray web
+         "#6495ED",  # Cornflower blue
+         "#607B8B",  # Slate gray
+         "#5F9EA0",  # Cadet blue
+         "#556B2F",  # Dark olive green
+         "#548B57"  # Sea green
+]
+
 def handle_time(start_time, end_time, intervals):
     try:
         time_list = []
@@ -37,7 +93,7 @@ def prepare_data(guarding_soldiers, first_shuffle, positions, row_shuffle, df):
                 position_names.append(f"{position_name}_{i}")
         else:
             position_names.append(position_name)
-
+    st.session_state.position_names = position_names
     shavtzak = logic.create_shavtsak(guarding_soldiers,
                                      st.session_state.time_slots,
                                      position_names,
@@ -58,6 +114,15 @@ def get_soldiers(edited_df):
     return soldiers
 
 
+def create_colors_dict(edited_df):
+    colors_dict = {}
+    for ind, row in edited_df.iterrows():
+        if row.get('active'):
+            name = row['name']
+            if ind <= len(colors):
+                colors_dict[name] = colors[ind]
+    return colors_dict
+
 def change_stage(stage_name):
     st.session_state.stage = stage_name
     if st.session_state.stage == "positions":
@@ -69,12 +134,18 @@ def change_stage(stage_name):
         st.session_state.time_slots = time_slots
     if st.session_state.stage == "done":
         soldiers = get_soldiers(st.session_state.edited_df)
+        st.session_state.paints = create_colors_dict(st.session_state.edited_df)
         prepare_data(soldiers,
                      st.session_state.shuffle_names,
                      st.session_state.positions,
                      st.session_state.do_shuffle,
                      st.session_state.edited_df)
         st.session_state.stage = "show"
+
+
+def paint_names(name):
+    color = st.session_state.paints[name]
+    return f'background-color: {color}'
 
 
 def get_names():
@@ -171,5 +242,13 @@ if __name__ == '__main__':
         st.session_state.edited_df = edited_df
         st.button("סיום", on_click=change_stage, args=["done"])
     if st.session_state.stage == "show":
-        st.table(st.session_state.shavtsak)
+        st.dataframe(
+            st.session_state.shavtsak.style.applymap(
+                paint_names,
+                subset=st.session_state.position_names
+            ),
+            hide_index=False,
+            width=600,
+            height=600
+        )
         st.balloons()

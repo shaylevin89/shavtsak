@@ -1,5 +1,4 @@
 import create_csv
-from datetime import timedelta
 import pandas as pd
 
 
@@ -16,14 +15,7 @@ def get_int_guard_num(positions: list[Position]) -> int:
     return guard_num
 
 
-def create_df(shavtsak, position_names, do_shuffle, file_name):
-    # writer = csv.writer(csv_file)
-    # writer.writerow(["time"] + position_names)
-    # for time_slot in shavtsak_data:
-    #     shavtsak_row = shavtsak_data[time_slot]
-    #     if do_shuffle:
-    #         shuffle(shavtsak_row)
-    #     writer.writerow([time_slot] + shavtsak_row)
+def create_df(file_name):
     df = pd.read_csv(file_name)
     return df
 
@@ -80,5 +72,5 @@ def create_shavtsak(guarding_soldiers, time_slots, position_names, interval_guar
             shavtsak[time_slot] = final_soldier_list[pointer:pointer+interval_guard_num]
             pointer += interval_guard_num
     file_name = create_csv.write_to_file(shavtsak, position_names, do_shuffle)
-    df = create_df(shavtsak, position_names, do_shuffle, file_name)
+    df = create_df(file_name)
     return df
