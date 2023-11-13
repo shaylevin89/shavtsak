@@ -3,9 +3,24 @@ import random
 import streamlit as st
 import pandas as pd
 import datetime
+from datetime import timedelta
 
 
-def prepare_data(guarding_soldiers, first_shuffle, start_time, end_time, intervals, positions, row_shuffle):
+def handle_time(start_time, end_time, intervals):
+    try:
+        time_list = []
+        last_time = start_time
+        intervals = timedelta(hours=intervals)
+        while last_time < end_time:
+            time_list.append(str(last_time))
+            last_time += intervals
+        return time_list
+    except Exception as e:
+        print("error in handle time:")
+        print(e)
+
+
+def prepare_data(guarding_soldiers, first_shuffle, positions, row_shuffle, df):
     if first_shuffle:
         random.shuffle(guarding_soldiers)
     do_shuffle = row_shuffle
@@ -24,12 +39,11 @@ def prepare_data(guarding_soldiers, first_shuffle, start_time, end_time, interva
             position_names.append(position_name)
 
     shavtzak = logic.create_shavtsak(guarding_soldiers,
-                                     start_time,
-                                     end_time,
-                                     intervals,
+                                     st.session_state.time_slots,
                                      position_names,
                                      interval_guard_num,
-                                     do_shuffle)
+                                     do_shuffle,
+                                     df)
     st.session_state.shavtsak = shavtzak
 
 
@@ -37,21 +51,29 @@ def get_soldiers(edited_df):
     soldiers = []
     for ind, row in edited_df.iterrows():
         if row.get('active'):
-            soldiers.append(row['name'])
+            if not row.get("constraint1"):
+                if not row.get("constraint2"):
+                    if not row.get("constraint3"):
+                        soldiers.append(row['name'])
     return soldiers
 
 
 def change_stage(stage_name):
     st.session_state.stage = stage_name
+    if st.session_state.stage == "positions":
+        time_slots = handle_time(
+            st.session_state.start_time,
+            st.session_state.end_time,
+            st.session_state.intervals
+        )
+        st.session_state.time_slots = time_slots
     if st.session_state.stage == "done":
         soldiers = get_soldiers(st.session_state.edited_df)
         prepare_data(soldiers,
                      st.session_state.shuffle_names,
-                     st.session_state.start_time,
-                     st.session_state.end_time,
-                     st.session_state.intervals,
                      st.session_state.positions,
-                     st.session_state.do_shuffle)
+                     st.session_state.do_shuffle,
+                     st.session_state.edited_df)
         st.session_state.stage = "show"
 
 
@@ -119,10 +141,33 @@ if __name__ == '__main__':
     if st.session_state.stage == "choose_soldiers":
         df = pd.DataFrame(
             [
-                {"name": x, "active": True} for x in default_soldiers
+                {"name": x, "active": True, "constraint1": "", "constraint2": "", "constraint3": ""} for x in default_soldiers
             ]
         )
-        edited_df = st.data_editor(df, num_rows="dynamic", width=300, height=1200)
+        edited_df = st.data_editor(
+            df, num_rows="dynamic", width=800, height=1200,
+            column_config={
+                "constraint1": st.column_config.SelectboxColumn(
+                    "constraint1",
+                    width="small",
+                    options=st.session_state.time_slots,
+                    required=False,
+                ),
+                "constraint2": st.column_config.SelectboxColumn(
+                    "constraint1",
+                    width="small",
+                    options=st.session_state.time_slots,
+                    required=False,
+                ),
+                "constraint3": st.column_config.SelectboxColumn(
+                    "constraint1",
+                    width="small",
+                    options=st.session_state.time_slots,
+                    required=False,
+                )
+            },
+            hide_index=False,
+        )
         st.session_state.edited_df = edited_df
         st.button("סיום", on_click=change_stage, args=["done"])
     if st.session_state.stage == "show":

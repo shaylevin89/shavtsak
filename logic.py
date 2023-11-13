@@ -9,20 +9,6 @@ class Position:
         self.soldiers_num = num
 
 
-def handle_time(start_time, end_time, intervals):
-    try:
-        time_list = []
-        last_time = start_time
-        intervals = timedelta(hours=intervals)
-        while last_time < end_time:
-            time_list.append(last_time)
-            last_time += intervals
-        return time_list
-    except Exception as e:
-        print("error in handle time:")
-        print(e)
-
-
 def get_int_guard_num(positions: list[Position]) -> int:
     guard_num = 0
     for pos in positions:
@@ -42,13 +28,37 @@ def create_df(shavtsak, position_names, do_shuffle, file_name):
     return df
 
 
-def create_shavtsak(guarding_soldiers, start_time, end_time, intervals, position_names, interval_guard_num, do_shuffle):
+def get_slots_to_reduce(df):
+    slots_to_reduce = 0
+    time_constraint_dict = {}
+    for ind, row in df.iterrows():
+        if row.get('active'):
+            sold_name = row['name']
+            if row.get("constraint1"):
+                if row.get("constraint1") not in time_constraint_dict:
+                    time_constraint_dict[row.get("constraint1")] = [sold_name]
+                else:
+                    time_constraint_dict[row.get("constraint1")].append(sold_name)
+                slots_to_reduce += 1
+            if row.get("constraint2"):
+                if row.get("constraint2") not in time_constraint_dict:
+                    time_constraint_dict[row.get("constraint2")] = [sold_name]
+                else:
+                    time_constraint_dict[row.get("constraint2")].append(sold_name)
+                slots_to_reduce += 1
+            if row.get("constraint3"):
+                if row.get("constraint3") not in time_constraint_dict:
+                    time_constraint_dict[row.get("constraint3")] = [sold_name]
+                else:
+                    time_constraint_dict[row.get("constraint3")].append(sold_name)
+                slots_to_reduce += 1
+    return slots_to_reduce, time_constraint_dict
+
+
+def create_shavtsak(guarding_soldiers, time_slots, position_names, interval_guard_num, do_shuffle, df):
     soldiers_num = len(guarding_soldiers)
-    time_slots = handle_time(
-        start_time,
-        end_time,
-        intervals)
-    total_slots = interval_guard_num * len(time_slots)
+    slots_to_reduce, time_constraint_dict = get_slots_to_reduce(df)
+    total_slots = (interval_guard_num * len(time_slots)) - slots_to_reduce
     add_a_round = 0
     if total_slots % soldiers_num > 0:
         add_a_round = 1
@@ -57,8 +67,18 @@ def create_shavtsak(guarding_soldiers, start_time, end_time, intervals, position
     shavtsak = {}
     pointer = 0
     for time_slot in time_slots:
-        shavtsak[time_slot] = final_soldier_list[pointer:pointer+interval_guard_num]
-        pointer += interval_guard_num
+        if time_slot in time_constraint_dict:
+            added_sold_num = len(time_constraint_dict[time_slot])
+            if added_sold_num == interval_guard_num:
+                shavtsak[time_slot] = time_constraint_dict[time_slot]
+            else:
+                shavtsak[time_slot] = final_soldier_list[pointer:pointer+interval_guard_num-added_sold_num]
+                for sold in time_constraint_dict[time_slot]:
+                    shavtsak[time_slot].append(sold)
+                pointer += interval_guard_num-added_sold_num
+        else:
+            shavtsak[time_slot] = final_soldier_list[pointer:pointer+interval_guard_num]
+            pointer += interval_guard_num
     file_name = create_csv.write_to_file(shavtsak, position_names, do_shuffle)
     df = create_df(shavtsak, position_names, do_shuffle, file_name)
     return df
