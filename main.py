@@ -4,6 +4,8 @@ import streamlit as st
 import pandas as pd
 import datetime
 from datetime import timedelta
+from time import sleep
+import os
 
 
 colors = [
@@ -61,6 +63,7 @@ colors = [
          "#556B2F",  # Dark olive green
          "#548B57"  # Sea green
 ]
+
 
 def handle_time(start_time, end_time, intervals):
     try:
@@ -123,8 +126,38 @@ def create_colors_dict(edited_df):
                 colors_dict[name] = colors[ind]
     return colors_dict
 
+def paint_names(name):
+    color = st.session_state.paints[name]
+    return f'background-color: {color}'
+
+
+def get_names():
+    """
+    this function take the file names.txt and parse it line by line to names list
+    no comma or any seperator. one name per line
+    :return: names
+    """
+    if st.session_state.admin_pass == os.getenv('ADMIN_PASS', 'nopass'):
+        names = os.getenv('NAMES').split(",")
+    else:
+        with open('names.txt', 'r') as f:
+            names = []
+            for line in f:
+                names.append(line)
+    return names
+
+
 def change_stage(stage_name):
     st.session_state.stage = stage_name
+    if stage_name == "connect":
+        if st.session_state.admin_pass != os.getenv('ADMIN_PASS', 'nopass'):
+            st.warning("אתה לא ממחלקה 2 כנראה. ניכנסת כאנונימי")
+            sleep(3)
+            st.session_state.stage = "start"
+        else:
+            st.warning("אתה ממחלקה 2. ברוך הבא")
+            sleep(3)
+            st.session_state.stage = "start"
     if st.session_state.stage == "positions":
         time_slots = handle_time(
             st.session_state.start_time,
@@ -143,31 +176,18 @@ def change_stage(stage_name):
         st.session_state.stage = "show"
 
 
-def paint_names(name):
-    color = st.session_state.paints[name]
-    return f'background-color: {color}'
-
-
-def get_names():
-    """
-    this function take the file names.txt and parse it line by line to names list
-    no comma or any seperator. one name per line
-    :return: names
-    """
-    with open('names.txt', 'r') as f:
-        names = []
-        for line in f:
-            names.append(line)
-        return names
-
-
 if __name__ == '__main__':
-    default_soldiers = get_names()
+    # default_soldiers = get_names()
     st.set_page_config(page_title="shavtsak", layout="centered")
     st.header(':blue[שבצק] :sunglasses:', divider='rainbow')
 
     if 'stage' not in st.session_state:
-        st.session_state.stage = "start"
+        st.session_state.stage = "login"
+    if st.session_state.stage == "login":
+        password = st.text_input("סיסמה למחלקה 2:", type="password")
+        st.session_state.admin_pass = password
+        st.button("התחבר", on_click=change_stage, args=["connect"])
+        st.button("דלג", on_click=change_stage, args=["start"])
     if st.session_state.stage == "start":
         start_date = st.date_input("תאריך התחלה")
         s_time = st.time_input("שעת התחלה", datetime.time(16, 0))
@@ -210,6 +230,7 @@ if __name__ == '__main__':
                 st.session_state.positions[f"pos_{pos}"] = {"pos_name": pos_name, "guards": guards}
         st.button("המשך", on_click=change_stage, args=["choose_soldiers"])
     if st.session_state.stage == "choose_soldiers":
+        default_soldiers = get_names()
         df = pd.DataFrame(
             [
                 {"name": x, "active": True, "constraint1": "", "constraint2": "", "constraint3": ""} for x in default_soldiers
