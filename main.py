@@ -176,18 +176,14 @@ def change_stage(stage_name):
         st.session_state.stage = "show"
 
 
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+
 if __name__ == '__main__':
     st.set_page_config(page_title="shavtsak", layout="centered")
-    # st.markdown(
-    #     """
-    # <style>
-    #     .stTextInput {
-    #         text-align: right;
-    #     }
-    # </style>
-    # """,
-    #     unsafe_allow_html=True,
-    # )
+    # local_css("style.css")
     st.header(':blue[שבצק] :sunglasses:', divider='rainbow')
 
     if 'stage' not in st.session_state:
@@ -212,8 +208,10 @@ if __name__ == '__main__':
     if st.session_state.stage == "end_time":
         shuffle_names = st.checkbox("לערבב את סדר רשימת השמות")
         do_shuffle = st.checkbox("לערבב כל שורה בשבצק")
-        intervals = st.slider("?כמה שעות כל שמירה", 1, 8, 2)
-        positions_num = st.slider("?כמה עמדות יש", 1, 7, 3)
+        # intervals = st.slider("?כמה שעות כל שמירה", 1, 8, 2)
+        intervals = st.number_input("?כמה שעות כל שמירה", value=2, min_value=1, step=1)
+        # positions_num = st.slider("?כמה עמדות יש", 1, 7, 3)
+        positions_num = st.number_input("?כמה עמדות יש", value=3, min_value=1, step=1)
         st.session_state.shuffle_names = shuffle_names
         st.session_state.do_shuffle = do_shuffle
         st.session_state.intervals = intervals
@@ -222,20 +220,21 @@ if __name__ == '__main__':
     if st.session_state.stage == "positions":
         for pos in range(st.session_state.positions_num):
             if pos == 0:
-                pos_name = st.text_input("שם העמדה", "ש.ג", key=f"pos_{pos}")
-                guards = st.slider("מספר שומרים", 1, 4, 2, key=f"guards_{pos}")
+                c = st.container()
+                pos_name = c.text_input("שם העמדה", "ש.ג", key=f"pos_{pos}")
+                guards = c.number_input("מספר שומרים", min_value=1, step=1, value=2, key=f"guards_{pos}")
                 st.session_state.positions = {f"pos_{pos}": {"pos_name": pos_name, "guards": guards}}
             elif pos == 1:
                 pos_name = st.text_input("שם העמדה", "פחיות", key=f"pos_{pos}")
-                guards = st.slider("מספר שומרים", 1, 4, 1, key=f"guards_{pos}")
+                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=1, key=f"guards_{pos}")
                 st.session_state.positions[f"pos_{pos}"] = {"pos_name": pos_name, "guards": guards}
             elif pos == 2:
                 pos_name = st.text_input("שם העמדה", "תצפית", key=f"pos_{pos}")
-                guards = st.slider("מספר שומרים", 1, 4, 1, key=f"guards_{pos}")
+                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=1, key=f"guards_{pos}")
                 st.session_state.positions[f"pos_{pos}"] = {"pos_name": pos_name, "guards": guards}
             else:
                 pos_name = st.text_input("שם העמדה", "", key=f"pos_{pos}")
-                guards = st.slider("מספר שומרים", 1, 4, 1, key=f"guards_{pos}")
+                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=1, key=f"guards_{pos}")
                 st.session_state.positions[f"pos_{pos}"] = {"pos_name": pos_name, "guards": guards}
         st.button("המשך", on_click=change_stage, args=["choose_soldiers"])
     if st.session_state.stage == "choose_soldiers":
