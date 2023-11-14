@@ -177,8 +177,17 @@ def change_stage(stage_name):
 
 
 if __name__ == '__main__':
-    # default_soldiers = get_names()
     st.set_page_config(page_title="shavtsak", layout="centered")
+    # st.markdown(
+    #     """
+    # <style>
+    #     .stTextInput {
+    #         text-align: right;
+    #     }
+    # </style>
+    # """,
+    #     unsafe_allow_html=True,
+    # )
     st.header(':blue[שבצק] :sunglasses:', divider='rainbow')
 
     if 'stage' not in st.session_state:
@@ -231,13 +240,17 @@ if __name__ == '__main__':
         st.button("המשך", on_click=change_stage, args=["choose_soldiers"])
     if st.session_state.stage == "choose_soldiers":
         default_soldiers = get_names()
+        st.write("ניתן לערוך את הטבלה")
+        st.write("להוסיף שורות כדי להוסיף אנשים")
+        st.write("אם תבחר להוסיף אילוץ/ים לחייל אז הוא ישמור אך ורק באילוצים שבחרת עבורו")
+        st.write("כדי להוריד חייל מהרשימה אפשר להסיר את סימון הפעיל")
         df = pd.DataFrame(
             [
                 {"name": x, "active": True, "constraint1": "", "constraint2": "", "constraint3": ""} for x in default_soldiers
             ]
         )
         edited_df = st.data_editor(
-            df, num_rows="dynamic", width=800, height=1200,
+            df, num_rows="dynamic", width=800, height=800,
             column_config={
                 "constraint1": st.column_config.SelectboxColumn(
                     "constraint1",
