@@ -275,7 +275,7 @@ if __name__ == '__main__':
         st.session_state.edited_df = edited_df
         st.button("סיום", on_click=change_stage, args=["done"])
     if st.session_state.stage == "show":
-        st.dataframe(
+        st.data_editor(
             st.session_state.shavtsak.style.applymap(
                 paint_names,
                 subset=st.session_state.position_names
