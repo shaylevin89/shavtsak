@@ -69,7 +69,7 @@ def handle_time(start_time, end_time, intervals):
     try:
         time_list = []
         last_time = start_time
-        intervals = timedelta(hours=intervals)
+        intervals = timedelta(minutes=intervals)
         while last_time < end_time:
             time_list.append(str(last_time))
             last_time += intervals
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         shuffle_names = st.checkbox("לערבב את סדר רשימת השמות")
         do_shuffle = st.checkbox("לערבב כל שורה בשבצק")
         # intervals = st.slider("?כמה שעות כל שמירה", 1, 8, 2)
-        intervals = st.number_input("?כמה שעות כל שמירה", value=float(2), min_value=0.15, step=0.5)
+        intervals = st.number_input("?כמה דקות כל שמירה", value=120, min_value=10, step=30)
         # positions_num = st.slider("?כמה עמדות יש", 1, 7, 3)
         positions_num = st.number_input("?כמה עמדות יש", value=3, min_value=1, step=1)
         st.session_state.shuffle_names = shuffle_names
