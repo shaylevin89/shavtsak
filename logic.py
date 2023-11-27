@@ -8,7 +8,7 @@ class Position:
         self.soldiers_num = num
 
 
-def get_int_guard_num(positions: list[Position]) -> int:
+def get_int_guard_num(positions) -> int:
     guard_num = 0
     for pos in positions:
         guard_num += pos.soldiers_num
