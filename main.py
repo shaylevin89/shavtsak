@@ -184,7 +184,7 @@ def local_css(file_name):
 if __name__ == '__main__':
     st.set_page_config(page_title="shavtsak", layout="centered")
     # local_css("style.css")
-    st.header(':blue[שבצק] :sunglasses:', divider='rainbow')
+    st.header(':blue[שבצק] :sunglasses:')
 
     if 'stage' not in st.session_state:
         st.session_state.stage = "login"
