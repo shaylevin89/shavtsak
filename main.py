@@ -6,6 +6,7 @@ import datetime
 from datetime import timedelta
 from time import sleep
 import os
+import defaults
 
 
 colors = [
@@ -194,24 +195,26 @@ if __name__ == '__main__':
         st.button("התחבר", on_click=change_stage, args=["connect"])
         st.button("דלג", on_click=change_stage, args=["start"])
     if st.session_state.stage == "start":
+        st.header("זמן התחלה")
         start_date = st.date_input("תאריך התחלה")
-        s_time = st.time_input("שעת התחלה", datetime.time(16, 0))
+        s_time = st.time_input("שעת התחלה", datetime.time(defaults.start_hour, defaults.start_minute))
         start_time = datetime.datetime(start_date.year, start_date.month, start_date.day, s_time.hour, s_time.minute)
         st.session_state.start_time = start_time
         st.button("המשך", on_click=change_stage, args=["start_time"])
     if st.session_state.stage == "start_time":
-        end_date = st.date_input("תאריך סיום", datetime.datetime.today() + datetime.timedelta(days=1))
-        e_time = st.time_input("שעת סיום", datetime.time(16, 0))
+        st.header("זמן סיום")
+        end_date = st.date_input("תאריך סיום", datetime.datetime.today() + datetime.timedelta(days=defaults.length_days))
+        e_time = st.time_input("שעת סיום", datetime.time(defaults.end_hour, defaults.end_minute))
         end_time = datetime.datetime(end_date.year, end_date.month, end_date.day, e_time.hour, e_time.minute)
         st.session_state.end_time = end_time
         st.button("המשך", on_click=change_stage, args=["end_time"])
     if st.session_state.stage == "end_time":
-        shuffle_names = st.checkbox("לערבב את סדר רשימת השמות")
-        do_shuffle = st.checkbox("לערבב כל שורה בשבצק")
+        shuffle_names = st.checkbox("לערבב את סדר רשימת השמות", value=defaults.shuff_list)
+        do_shuffle = st.checkbox("לערבב כל שורה בשבצק", value=defaults.shuff_row)
         # intervals = st.slider("?כמה שעות כל שמירה", 1, 8, 2)
-        intervals = st.number_input("?כמה דקות כל שמירה", value=120, min_value=10, step=30)
+        intervals = st.number_input("?כמה דקות כל שמירה", value=defaults.slot_minutes, min_value=10, step=30)
         # positions_num = st.slider("?כמה עמדות יש", 1, 7, 3)
-        positions_num = st.number_input("?כמה עמדות יש", value=3, min_value=1, step=1)
+        positions_num = st.number_input("?כמה עמדות יש", value=defaults.pos_num, min_value=1, step=1)
         st.session_state.shuffle_names = shuffle_names
         st.session_state.do_shuffle = do_shuffle
         st.session_state.intervals = intervals
@@ -221,16 +224,16 @@ if __name__ == '__main__':
         for pos in range(st.session_state.positions_num):
             if pos == 0:
                 c = st.container()
-                pos_name = c.text_input("שם העמדה", "ש.ג", key=f"pos_{pos}")
-                guards = c.number_input("מספר שומרים", min_value=1, step=1, value=2, key=f"guards_{pos}")
+                pos_name = c.text_input("שם העמדה", defaults.pos_1_name, key=f"pos_{pos}")
+                guards = c.number_input("מספר שומרים", min_value=1, step=1, value=defaults.pos_1_val, key=f"guards_{pos}")
                 st.session_state.positions = {f"pos_{pos}": {"pos_name": pos_name, "guards": guards}}
             elif pos == 1:
-                pos_name = st.text_input("שם העמדה", "פחיות", key=f"pos_{pos}")
-                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=1, key=f"guards_{pos}")
+                pos_name = st.text_input("שם העמדה", defaults.pos_2_name, key=f"pos_{pos}")
+                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=defaults.pos_2_val, key=f"guards_{pos}")
                 st.session_state.positions[f"pos_{pos}"] = {"pos_name": pos_name, "guards": guards}
             elif pos == 2:
-                pos_name = st.text_input("שם העמדה", "תצפית", key=f"pos_{pos}")
-                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=1, key=f"guards_{pos}")
+                pos_name = st.text_input("שם העמדה", defaults.pos_3_name, key=f"pos_{pos}")
+                guards = st.number_input("מספר שומרים", min_value=1, step=1, value=defaults.pos_3_val, key=f"guards_{pos}")
                 st.session_state.positions[f"pos_{pos}"] = {"pos_name": pos_name, "guards": guards}
             else:
                 pos_name = st.text_input("שם העמדה", "", key=f"pos_{pos}")
